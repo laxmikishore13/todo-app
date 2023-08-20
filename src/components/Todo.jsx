@@ -1,23 +1,96 @@
 import { Box, TextField, Container, Grid, Button } from "@mui/material";
 import List from "./List";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function Todo() {
   const [text, setText] = useState("");
   const [tasks, setTasks] = useState([]);
 
-  const handleTask = (taskId) => {
+  // Get Todo's --READ
+  const fetchTods = async () => {
+    const fetchRequest = await fetch("http://localhost:3000/todos", {
+      method: "GET",
+    });
+    const response = await fetchRequest.json();
+    setTasks(response);
+  };
+
+  useEffect(() => {
+    fetchTods();
+  }, []);
+
+  // to enable edit mode
+  const handleTask = (taskId, description) => {
     setTasks((prevTask) =>
-      prevTask.map((task, index) => {
-        if (index === taskId) {
+      prevTask.map((task) => {
+        if (task.id === taskId) {
           return {
             ...task,
-            isDisabled: false,
+            isEditable: true,
+            description: description,
           };
         }
         return task;
       })
     );
+    console.log(tasks);
+  };
+
+  // create Operation --CREATE
+  const createTask = async (obj) => {
+    const create = await fetch("http://localhost:3000/todos", {
+      method: "POST",
+      body: JSON.stringify(obj),
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+    const response = await create.json();
+    setTasks((prev) => [...prev, response]);
+    setText("");
+  };
+
+  //delete Operation --DELETE
+  const deleteTask = async (id) => {
+    const deleteRequest = await fetch("http://localhost:3000/todos/" + id, {
+      method: "DELETE",
+    });
+    const deleteResponse = await deleteRequest.text();
+    try {
+      if (deleteResponse === "OK") {
+        fetchTods();
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  // update Operation --PUT
+  const updateTodo = async (taskId) => {
+    const taskToUpdate = tasks
+      .filter((task) => task.id === taskId)
+      .map((item) => {
+        return {
+          ...item,
+          isEditable: false,
+        };
+      })[0];
+    console.log(taskToUpdate);
+    const updateRequest = await fetch("http://localhost:3000/todos/" + taskId, {
+      method: "PUT",
+      body: JSON.stringify(taskToUpdate),
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+    const updateResponse = await updateRequest.json();
+    try {
+      if (updateResponse) {
+        fetchTods();
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
   return (
     <Box sx={{ m: 20 }}>
@@ -39,18 +112,26 @@ function Todo() {
               sx={{ marginLeft: 4 }}
               onClick={() => {
                 const obj = {
-                  taks: text,
-                  isDisabled: true,
+                  title: "test",
+                  description: text,
+                  isEditable: false,
+                  completed: false,
                 };
-                setTasks((prev) => [...prev, obj]);
-                setText("");
+                createTask(obj);
               }}
             >
               Add
             </Button>
           </Grid>
         </Grid>
-        {<List tasks={tasks} handleTask={(id) => handleTask(id)} />}
+        {
+          <List
+            tasks={tasks}
+            handleTask={(id, description) => handleTask(id, description)}
+            deleteRequest={(id) => deleteTask(id)}
+            updateRequest={(id, description) => updateTodo(id, description)}
+          />
+        }
       </Container>
     </Box>
   );

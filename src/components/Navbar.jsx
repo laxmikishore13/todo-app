@@ -14,7 +14,15 @@ function NavBars() {
           }}
         >
           <Typography variant="h5" component="h1">
-            Tick Tick
+            <NavLink
+              to="/"
+              style={{
+                color: "white",
+                textDecoration: "none",
+              }}
+            >
+              Tick Tick
+            </NavLink>
           </Typography>
           <Box sx={{ display: "flex", gap: "15px" }}>
             <NavLink to="/signup">

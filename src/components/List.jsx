@@ -1,42 +1,47 @@
 /* eslint-disable react/prop-types */
 import { Delete, Done, Edit } from "@mui/icons-material";
 import { Box, Grid, InputAdornment, TextField } from "@mui/material";
-import { useState } from "react";
 
 function List(props) {
-  const [isEditable, setIsEditable] = useState(false);
   return (
     <>
       <Box sx={{ marginTop: 8 }}>
         <Grid container spacing={2}>
-          {props.tasks?.map((item, index) => {
+          {props.tasks?.map((item) => {
             return (
-              <Grid item xs={12} sm={10} key={index}>
+              <Grid item xs={12} sm={10} key={item.id}>
                 <TextField
                   fullWidth
-                  disabled={item.isDisabled}
-                  value={item.taks}
-                  key={index}
+                  disabled={!item.isEditable}
+                  value={item.description}
+                  key={item.id}
+                  onChange={(e) => props.handleTask(item.id, e.target.value)}
                   InputProps={{
                     endAdornment: (
                       <>
-                        {!isEditable ? (
+                        {!item.isEditable ? (
                           <InputAdornment position="end">
                             <Edit
                               onClick={() => {
-                                props.handleTask(index);
-                                setIsEditable(true);
+                                props.handleTask(item.id);
+                                // setIsEditable(true);
                               }}
                               sx={{ cursor: "pointer" }}
                             />
                           </InputAdornment>
                         ) : null}
                         <InputAdornment position="end">
-                          <Delete sx={{ cursor: "pointer" }} />
+                          <Delete
+                            onClick={() => props.deleteRequest(item.id)}
+                            sx={{ cursor: "pointer" }}
+                          />
                         </InputAdornment>
-                        {isEditable ? (
+                        {item.isEditable ? (
                           <InputAdornment position="end">
-                            <Done sx={{ cursor: "pointer" }} />
+                            <Done
+                              onClick={() => props.updateRequest(item.id)}
+                              sx={{ cursor: "pointer" }}
+                            />
                           </InputAdornment>
                         ) : null}
                       </>

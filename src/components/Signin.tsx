@@ -1,5 +1,6 @@
-import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LockOutlinedIcon from "@mui/icons-material/LockOpen";
 import {
+  Alert,
   Avatar,
   Box,
   Button,
@@ -8,13 +9,51 @@ import {
   FormControlLabel,
   Grid,
   Link,
+  Snackbar,
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 
 function Signin() {
+  const [error, setError] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  
+  const signin = async (
+    email: any,
+    password: any
+  ) => {
+    const obj = {
+      email,
+      password,
+    };
+    const signinRequest = await fetch("http://localhost:3000/signin", {
+      method: "POST",
+      body: JSON.stringify(obj),
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+    const signinResponse = await signinRequest.json();
+    console.log(signinResponse);
+    try {
+      if (
+        signinResponse.message === "Invalid email or password" ||
+        signinResponse.message === "Invalid credentials"
+      ) {
+        setError(true);
+      } else {
+        navigate("/todos")
+      }
+    } catch (err) {
+      const errorMessage = err.message;
+      console.error(errorMessage);
+    }
+  };
+
   return (
     <>
       <Box>
@@ -29,7 +68,7 @@ function Signin() {
             }}
           >
             <Avatar sx={{ backgroundColor: "#9c27b0", m: 1 }}>
-              <LockOpenIcon />
+              <LockOutlinedIcon />
             </Avatar>
             <Typography variant="h5" component="h1">
               Sign in
@@ -41,6 +80,8 @@ function Signin() {
                     variant="outlined"
                     label="Email Address"
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     fullWidth
                   />
                 </Grid>
@@ -48,6 +89,8 @@ function Signin() {
                   <TextField
                     variant="outlined"
                     label="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     type="password"
                     fullWidth
@@ -65,15 +108,21 @@ function Signin() {
                 variant="contained"
                 fullWidth
                 sx={{ marginTop: 4, marginBottom: 2 }}
+                onClick={() => signin(email, password)}
               >
                 SIGN IN
               </Button>
               <Grid container justifyContent="space-between">
                 <Link href="#" variant="body2">Forgot password?</Link>
-                <NavLink to="/signup">Don't have an account? Sign Up</NavLink>
+                <NavLink to="/signup" style={{color:"#1976d2"}}>Don't have an account? Sign Up</NavLink>
               </Grid>
             </Box>
           </Box>
+          <Snackbar open={error} autoHideDuration={3000} onClose={() => setError(false)}>
+          <Alert severity="error" sx={{ mt: 2 }}>
+            Invalid details or user doesn't exists
+          </Alert>
+        </Snackbar>
         </Container>
       </Box>
     </>
